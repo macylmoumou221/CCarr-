@@ -1,16 +1,18 @@
-import sgMail from '@sendgrid/mail';
+import nodemailer from 'nodemailer';
 import path from 'path';
 import fs from 'fs';
 
-/* ───────── SendGrid init ───────── */
+/* ───────── Transporter SMTP ───────── */
 
-const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || '';
-
-if (SENDGRID_API_KEY) {
-  sgMail.setApiKey(SENDGRID_API_KEY);
-} else {
-  console.warn('[WARN] SENDGRID_API_KEY is not set – emails will not be sent');
-}
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: parseInt(process.env.SMTP_PORT || '587', 10),
+  secure: process.env.SMTP_SECURE === 'true',
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 
 /* ───────── Chargement du template ───────── */
 
@@ -44,21 +46,19 @@ export const sendConfirmationEmail = async ({
     CONFIRMATION_CODE: confirmationCode,
   });
 
-  const msg = {
+  const mailOptions = {
+    from: `"CCarré" <${process.env.SMTP_USER}>`,
     to,
-    from: process.env.SENDGRID_FROM || 'noreply@ccarre.fr',
     subject: 'Confirme ton compte CCarré',
     html,
   };
 
   try {
-    await sgMail.send(msg);
+    await transporter.sendMail(mailOptions);
     console.log(`[OK] Confirmation email sent to ${to}`);
-  } catch (error: any) {
-    const details = error?.response?.body?.errors || error;
-    console.error(`[ERROR] Failed to send confirmation email to ${to}:`, details);
+  } catch (error) {
+    console.error(`[ERROR] Failed to send confirmation email to ${to}:`, error);
     throw new Error("Impossible d'envoyer l'email de confirmation");
   }
 };
-
 
