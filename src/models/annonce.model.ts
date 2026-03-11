@@ -2,18 +2,15 @@ import mongoose, { Document, Schema, Types } from 'mongoose';
 
 /* ───────── Types ───────── */
 
-export enum AnnonceCategory {
-  LOGEMENT = 'logement',
-  COVOITURAGE = 'covoiturage',
-  MATERIEL = 'materiel',
-  COURS = 'cours',
-  AUTRE = 'autre',
+export enum AnnonceType {
+  VENTE = 'vente',
+  PRET = 'pret',
+  DEMANDE_PRET = 'demandePret',
 }
 
 export enum AnnonceStatus {
-  ACTIVE = 'active',
-  CLOSED = 'closed',
-  DRAFT = 'draft',
+  DISPONIBLE = 'disponible',
+  RESERVE = 'reserve',
 }
 
 /* ───────── Interface ───────── */
@@ -21,10 +18,11 @@ export enum AnnonceStatus {
 export interface IAnnonce extends Document {
   title: string;
   description: string;
-  category: AnnonceCategory;
-  price?: number;
-  author: Types.ObjectId;
+  type: AnnonceType;
+  category?: string;
   status: AnnonceStatus;
+  images: string[];
+  owner: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -47,25 +45,32 @@ const annonceSchema = new Schema<IAnnonce>(
       minlength: [10, 'La description doit faire au moins 10 caractères'],
       maxlength: [2000, 'La description ne peut pas dépasser 2000 caractères'],
     },
+    type: {
+      type: String,
+      enum: {
+        values: Object.values(AnnonceType),
+        message: 'Le type doit être : vente, pret ou demandePret',
+      },
+      required: [true, 'Le type est requis'],
+    },
     category: {
       type: String,
-      enum: Object.values(AnnonceCategory),
-      required: [true, 'La catégorie est requise'],
-    },
-    price: {
-      type: Number,
-      min: [0, 'Le prix ne peut pas être négatif'],
-      default: 0,
-    },
-    author: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: [true, "L'auteur est requis"],
+      trim: true,
+      maxlength: [50, 'La catégorie ne peut pas dépasser 50 caractères'],
     },
     status: {
       type: String,
       enum: Object.values(AnnonceStatus),
-      default: AnnonceStatus.ACTIVE,
+      default: AnnonceStatus.DISPONIBLE,
+    },
+    images: {
+      type: [String],
+      default: [],
+    },
+    owner: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'Le propriétaire est requis'],
     },
   },
   {
@@ -82,9 +87,10 @@ const annonceSchema = new Schema<IAnnonce>(
 
 /* ───────── Index ───────── */
 
-annonceSchema.index({ author: 1 });
-annonceSchema.index({ category: 1 });
+annonceSchema.index({ owner: 1 });
+annonceSchema.index({ type: 1 });
 annonceSchema.index({ status: 1 });
+annonceSchema.index({ category: 1 });
 annonceSchema.index({ createdAt: -1 });
 
 /* ───────── Export ───────── */

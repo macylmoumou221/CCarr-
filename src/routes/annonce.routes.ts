@@ -1,14 +1,48 @@
 import { Router } from 'express';
-import { getAnnonces } from '../controllers/annonce.controller';
+import {
+  createAnnonce,
+  getAnnonces,
+  getAnnonceById,
+  updateAnnonce,
+  deleteAnnonce,
+} from '../controllers/annonce.controller';
 import authMiddleware from '../middlewares/auth.middleware';
 
 const router = Router();
 
 /**
+ * @route   POST /api/annonces
+ * @desc    Créer une annonce
+ * @access  Private
+ */
+router.post('/', authMiddleware, createAnnonce);
+
+/**
  * @route   GET /api/annonces
- * @desc    Récupérer toutes les annonces (route protégée)
+ * @desc    Récupérer toutes les annonces (filtres optionnels via query)
  * @access  Private
  */
 router.get('/', authMiddleware, getAnnonces);
+
+/**
+ * @route   GET /api/annonces/:id
+ * @desc    Récupérer une annonce par son ID
+ * @access  Public
+ */
+router.get('/:id', getAnnonceById);
+
+/**
+ * @route   PUT /api/annonces/:id
+ * @desc    Modifier une annonce (propriétaire uniquement)
+ * @access  Private + Owner
+ */
+router.put('/:id', authMiddleware, updateAnnonce);
+
+/**
+ * @route   DELETE /api/annonces/:id
+ * @desc    Supprimer une annonce (propriétaire uniquement)
+ * @access  Private + Owner
+ */
+router.delete('/:id', authMiddleware, deleteAnnonce);
 
 export default router;
