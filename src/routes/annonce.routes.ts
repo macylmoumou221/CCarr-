@@ -7,6 +7,7 @@ import {
   deleteAnnonce,
 } from '../controllers/annonce.controller';
 import authMiddleware from '../middlewares/auth.middleware';
+import upload from '../middlewares/upload.middleware';
 
 const router = Router();
 
@@ -15,7 +16,7 @@ const router = Router();
  * @desc    Créer une annonce
  * @access  Private
  */
-router.post('/', authMiddleware, createAnnonce);
+router.post('/', authMiddleware, upload.array('images', 6), createAnnonce);
 
 /**
  * @route   GET /api/annonces
@@ -36,7 +37,7 @@ router.get('/:id', getAnnonceById);
  * @desc    Modifier une annonce (propriétaire uniquement)
  * @access  Private + Owner
  */
-router.put('/:id', authMiddleware, updateAnnonce);
+router.put('/:id', authMiddleware, upload.array('images', 6), updateAnnonce);
 
 /**
  * @route   DELETE /api/annonces/:id

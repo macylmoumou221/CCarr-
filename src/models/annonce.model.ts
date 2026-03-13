@@ -4,6 +4,7 @@ import mongoose, { Document, Schema, Types } from 'mongoose';
 
 export enum AnnonceType {
   VENTE = 'vente',
+  ECHANGE = 'echange',
   PRET = 'pret',
   DEMANDE_PRET = 'demandePret',
 }
@@ -22,6 +23,10 @@ export interface IAnnonce extends Document {
   category?: string;
   status: AnnonceStatus;
   images: string[];
+  price?: number; // Required if type is 'vente'
+  exchangeFor?: string; // Required if type is 'echange'
+  exchangeImage?: string; // Image of the item being exchanged for
+  borrowPeriod?: string; // Required if type is 'pret' (e.g., "2 semaines", "1 mois")
   owner: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -66,6 +71,29 @@ const annonceSchema = new Schema<IAnnonce>(
     images: {
       type: [String],
       default: [],
+    },
+    price: {
+      type: Number,
+      min: [0, 'Le prix ne peut pas être négatif'],
+      // Required conditionally in controller based on type
+    },
+    exchangeFor: {
+      type: String,
+      trim: true,
+      minlength: [5, 'La description d\'échange doit faire au moins 5 caractères'],
+      maxlength: [500, 'La description d\'échange ne peut pas dépasser 500 caractères'],
+      // Required conditionally in controller based on type
+    },
+    exchangeImage: {
+      type: String,
+      // URL to image of the item being exchanged for
+    },
+    borrowPeriod: {
+      type: String,
+      trim: true,
+      minlength: [3, 'La période doit faire au moins 3 caractères'],
+      maxlength: [100, 'La période ne peut pas dépasser 100 caractères'],
+      // Required conditionally in controller based on type
     },
     owner: {
       type: Schema.Types.ObjectId,
