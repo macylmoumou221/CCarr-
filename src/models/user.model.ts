@@ -12,6 +12,7 @@ export interface IUser extends Document {
   isVerified: boolean;
   confirmationToken?: string;
   confirmationExpires?: Date;
+  favorites: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -60,6 +61,11 @@ const userSchema = new Schema<IUser>(
     confirmationExpires: {
       type: Date,
       select: false,
+    },
+    favorites: {
+      type: [Schema.Types.ObjectId],
+      ref: 'Annonce',
+      default: [],
     },
   },
   {

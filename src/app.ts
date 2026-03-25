@@ -3,17 +3,20 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import express from 'express';
+import { createServer } from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 
 import connectDB from './config/db';
+import initializeSocket from './config/socket';
 import routes from './routes';
 import errorMiddleware from './middlewares/error.middleware';
 
 /* ────────── App Express ────────── */
 
 const app = express();
+const httpServer = createServer(app);
 
 /* ── Middlewares globaux ── */
 
@@ -65,6 +68,10 @@ app.all('{*path}', (_req, res) => {
 
 app.use(errorMiddleware);
 
+/* ────────── WebSocket – Socket.io ────────── */
+
+initializeSocket(httpServer);
+
 /* ────────── Démarrage du serveur ────────── */
 
 const PORT = parseInt(process.env.PORT || '5000', 10);
@@ -72,9 +79,10 @@ const PORT = parseInt(process.env.PORT || '5000', 10);
 const startServer = async (): Promise<void> => {
   await connectDB();
 
-  app.listen(PORT, () => {
+  httpServer.listen(PORT, () => {
     console.log(`\n[OK] CCarré API démarrée sur http://localhost:${PORT}`);
-    console.log(`[INFO] Environnement : ${process.env.NODE_ENV || 'development'}\n`);
+    console.log(`[INFO] Environnement : ${process.env.NODE_ENV || 'development'}`);
+    console.log(`[INFO] WebSocket disponible sur ws://localhost:${PORT}\n`);
   });
 };
 
